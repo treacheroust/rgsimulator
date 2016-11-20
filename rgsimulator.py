@@ -1,10 +1,5 @@
 #!/usr/bin/env python2
 import tkSimpleDialog
-import argparse
-import ast
-
-import pkg_resources
-
 from rgsimulatorUI import SimulatorUI
 from rgkit.game import Player
 from rgkit.gamestate import GameState
@@ -13,7 +8,7 @@ import getrgmatch
 
 
 class Simulator:
-    def __init__(self, player1_path, player2_path):
+    def __init__(self, player1_path, player2_path, uiClass):
         self.match_id = None
 
         self.player = Player(player1_path) if player1_path else None
@@ -28,7 +23,7 @@ class Simulator:
 
         self.turn_repeat = False
 
-        self.UI = SimulatorUI(settings)
+        self.UI = uiClass(settings)
         self.UI.setTitle("Robot Game Simulator")
 
         self.state = GameState(settings, turn=1)
@@ -65,6 +60,8 @@ class Simulator:
         self.UI.bind("n", self.onNextAction)
         self.UI.bind("g", self.onSpawnRobots)
 
+
+    def run(self):
         self.UI.run()
 
     def onReloadPlayer(self, event):
@@ -291,7 +288,12 @@ class Simulator:
             player_id = i // settings.spawn_per_player
             self._addRobot(player_id, loc)
 
-if __name__ == "__main__":
+def parseArguments():
+
+    import pkg_resources
+    import argparse
+    import ast
+
     parser = argparse.ArgumentParser(description="Robot game simulation script.")
     parser.add_argument(
         "player",
@@ -314,7 +316,14 @@ if __name__ == "__main__":
     map_data = ast.literal_eval(args.map.read())
     settings.init_map(map_data)
 
+    return args
+
+
+if __name__ == "__main__":
+
+    args = parseArguments()
     p1_path = args.player
     p2_path = args.player2
 
-    Simulator(p1_path, p2_path)
+    s = Simulator(p1_path, p2_path, SimulatorUI)
+    s.run()
